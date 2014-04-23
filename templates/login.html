@@ -1,0 +1,71 @@
+
+<!-- CSS for the login boxes. -->
+
+<style>
+.new_user { background-color:#efe }
+.login { background-color:#fef }
+.box { float:left; margin:20px; border:1px solid; padding: 0 10; }
+.box input { margin-left: 10px; margin-bottom: 1px }
+.box input[type=submit]{ margin-top: 10px }
+.error {background-color: #fee; margin:2px; border-color:#fdd; display:hidden}
+</style>
+
+<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js'>
+</script>
+
+<script>
+window.onload = function () {
+
+  // On form submit, post to /new_user or /login.  Display any errors.
+
+  var strs = ['new_user', 'login']
+  for(var i = 0; i < strs.length; i++) {
+    $('#' + strs[i]).submit(function(el_id){ return function(e) {
+      e.preventDefault()
+
+      var username = $('#' + el_id).find('input[name=username]').val(),
+          email = $('#' + el_id).find('input[name=email]').val(),
+          password = $('#' + el_id).find('input[name=password]').val()
+
+      $.post(
+        '/' + el_id, 
+        {'email':email, 'username':username, 'password':password}
+      ).done(
+        function(data) {
+            window.location.href = "/"
+        }
+      ).fail(
+        function(data) {
+            $('#' + el_id + ' > .error').html(
+                '<p>Error: {0}</p>'.replace('{0}', data.responseText))
+        }
+      )
+      return false
+    }}(strs[i]));
+  }
+}
+</script>
+
+<!-- The login forms. -->
+
+<div class="new_user box">
+<p>New User</p>
+<form id="new_user">
+    <p class="error"></p>
+    <div><input name='email' placeholder='Email'/></div>
+    <div><input name='username' placeholder='Username'/></div>
+    <div><input name='password' type='password' placeholder='Password'/></div>
+    <input type='submit'>
+</form>
+</div>
+
+<div class="login box">
+<p>Login</p>
+<form id='login'>
+    <p class="error"></p>
+    <div><input name='username' placeholder='Username'/></div>
+    <div><input name='password' type='password' placeholder='Password'/></div>
+    <input type='submit'>
+</form>
+</div>
+
