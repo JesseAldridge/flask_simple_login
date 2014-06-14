@@ -7,9 +7,10 @@ import hashlib
 import flask
 from flask import request, session
 
-# Init.  Load user db.
-
 app = flask.Flask(__name__)
+
+# Load user credentials from a json file.
+
 user_db = {'hashes':{}, 'salts':{}, 'user_info':{}}
 user_db_path = 'user_db.json'
 if os.path.exists(user_db_path):
@@ -77,10 +78,15 @@ def logout():
 
 @app.route('/get_secret_thing', methods=['GET'])
 def get_secret_thing():
-    username = session.get('username', None)
-    if not username or username not in user_db['user_info']:
+    if not is_logged_in():
         return flask.redirect('/login')
     return 'This is the secret thing!'
+
+
+def is_logged_in():
+    username = session.get('username', None)
+    return username and username in user_db['user_info']
+
 
 @app.route('/')
 def index():
