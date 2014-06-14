@@ -14,7 +14,7 @@ def index():
     return flask.render_template('index.html')
 
 
-def require_login(fn, redirect=True):
+def require_login(fn, redirect=False):
     def wrapped():
         username = session.get('username', None)
         if not username or username not in user_db['user_info']:
@@ -28,7 +28,7 @@ def require_login(fn, redirect=True):
 # An example route showing how to require login.
 
 @app.route('/get_secret_thing', methods=['GET'])
-@require_login
+@require_login(redirect=True)
 def get_secret_thing():
     return 'This is the secret thing!'
 
