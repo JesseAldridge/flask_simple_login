@@ -1,8 +1,4 @@
-import os
-import json
-import re
-import uuid
-import hashlib
+import os, json, re, uuid, hashlib
 
 import flask
 from flask import request, session
