@@ -13,16 +13,19 @@ app = flask.Flask(__name__)
 def index():
     return flask.render_template('index.html')
 
+# Require login decorator.  Optionally redirect to login page.
 
-def require_login(fn, redirect=False):
-    def wrapped():
-        username = session.get('username', None)
-        if not username or username not in user_db['user_info']:
-            if redirect:
-                return flask.redirect('/login')
-            return 'not logged in', 401
-        return fn()
-    return wrapped
+def require_login(redirect=False):
+    def require_login_(fn):
+        def wrapped():
+            username = session.get('username', None)
+            if not username or username not in user_db['user_info']:
+                if redirect:
+                    return flask.redirect('/login')
+                return 'not logged in', 401
+            return fn()
+        return wrapped
+    return require_login_
 
 
 # An example route showing how to require login.
@@ -33,13 +36,15 @@ def get_secret_thing():
     return 'This is the secret thing!'
 
 
-# Load user credentials from a json file.
+def load_db(user_db_path='user_db.json'):
 
-user_db = {'hashes':{}, 'salts':{}, 'user_info':{}}
-user_db_path = 'user_db.json'
-if os.path.exists(user_db_path):
-    with open(user_db_path) as f:
-        user_db = json.loads(f.read())
+    # Load user credentials from a json file.
+
+    global user_db
+    user_db = {'hashes':{}, 'salts':{}, 'user_info':{}}
+    if os.path.exists(user_db_path):
+        with open(user_db_path) as f:
+            user_db = json.loads(f.read())
 
 
 @app.route('/new_user', methods=['POST'])
