@@ -1,5 +1,4 @@
-import os, json, re, uuid, hashlib
-from functools import wraps
+import os, json, re, uuid, hashlib, functools
 
 import flask
 from flask import request, session
@@ -12,7 +11,7 @@ class g:
 
 def require_login(redirect=False):
     def decorator(fn):
-        @wraps(fn)
+        @functools.wraps(fn)
         def decorated_function(*a, **kw):
             username = session.get('username', None)
             if not username or username not in g.user_db['user_info']:
