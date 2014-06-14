@@ -3,13 +3,11 @@ import os, json, re, uuid, hashlib
 import flask
 from flask import request, session
 
-app = flask.Flask(__name__)
+class g:
+    user_db = None
 
-@app.route('/')
-def index():
-    return flask.render_template('index.html')
 
-# Require login decorator.  Optionally redirect to login page.
+# A decorator to require login.  Optionally redirect to a login page.
 
 def require_login(redirect=False):
     def require_login_(fn):
@@ -24,14 +22,6 @@ def require_login(redirect=False):
     return require_login_
 
 
-# An example route showing how to require login.
-
-@app.route('/get_secret_thing', methods=['GET'])
-@require_login(redirect=True)
-def get_secret_thing():
-    return 'This is the secret thing!'
-
-
 # Load user credentials from a json file.
 
 def load_db(user_db_path='user_db.json'):
@@ -44,7 +34,6 @@ def load_db(user_db_path='user_db.json'):
 
 # Validate credentials and save a new user.
 
-@app.route('/new_user', methods=['POST'])
 def new_user():
     username, email, password = (
         request.form['username'], request.form['email'],
@@ -77,7 +66,6 @@ def new_user():
 
 # Verify username and password; log the user in.
 
-@app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username, password = (
@@ -92,20 +80,38 @@ def login():
         return 'ok'
     return flask.render_template('login.html')
 
-
-@app.route('/logout')
 def logout():
     session.pop('username', None)
     return flask.redirect('/')
 
-class g:
-    user_db = None
+def add_login_routes(app):
+    app.add_url_rule('/logout', None, logout)
+    app.add_url_rule('/login', None, login, methods=['GET', 'POST'])
+    app.add_url_rule('/new_user', None, new_user, methods=['POST'])
 
 
-# Generate a secret key like so:  import os; os.urandom(17)
-app.secret_key = 'a unique secret string used to encrypt sessions'
+if __name__ == '__main__':   
 
-if __name__ == '__main__':
+    # Run the example app.
+
+    app = flask.Flask(__name__)
+
+    # Generate a secret key like so:  import os; os.urandom(17)
+    app.secret_key = 'a unique secret string used to encrypt sessions'
+
+    add_login_routes(app)
+
+    @app.route('/')
+    def index():
+        return flask.render_template('index.html')
+
+    # An example route showing how to require login.
+
+    @app.route('/get_secret_thing', methods=['GET'])
+    @require_login(redirect=True)
+    def get_secret_thing():
+        return 'This is the secret thing!'
+
     load_db()
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=port==5000)
