@@ -92,8 +92,8 @@ def is_logged_in():
 def index():
     return flask.render_template('index.html')
 
-
-app.secret_key = 'the unique secret string used to encrypt sessions'
+# Generate a secret key like so:  import os; os.urandom(17)
+app.secret_key = 'a unique secret string used to encrypt sessions'
 
 if __name__ == '__main__':
     # Bind to PORT if defined, otherwise default to 5000.
