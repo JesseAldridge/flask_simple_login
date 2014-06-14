@@ -84,6 +84,9 @@ def logout():
     session.pop('username', None)
     return flask.redirect('/')
 
+
+# Add routes for login related functions.
+
 def add_login_routes(app):
     app.add_url_rule('/logout', None, logout)
     app.add_url_rule('/login', None, login, methods=['GET', 'POST'])
