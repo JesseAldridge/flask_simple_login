@@ -1,4 +1,5 @@
 import os, json, re, uuid, hashlib
+from functools import wraps
 
 import flask
 from flask import request, session
@@ -10,26 +11,17 @@ class g:
 # A decorator to require login.  Optionally redirect to a login page.
 
 def require_login(redirect=False):
-    def require_login_(fn):
-        def wrapped():
+    def decorator(fn):
+        @wraps(fn)
+        def decorated_function(*a, **kw):
             username = session.get('username', None)
             if not username or username not in g.user_db['user_info']:
                 if redirect:
                     return flask.redirect('/login')
                 return 'not logged in', 401
-            return fn()
-        return wrapped
-    return require_login_
-
-
-# Load user credentials from a json file.
-
-def load_db(user_db_path='user_db.json'):
-    g.user_db = {'hashes':{}, 'salts':{}, 'user_info':{}}
-    g.user_db_path = user_db_path
-    if os.path.exists(user_db_path):
-        with open(user_db_path) as f:
-            g.user_db = json.loads(f.read())
+            return fn(*a, **kw)
+        return decorated_function
+    return decorator
 
 
 # Validate credentials and save a new user.
@@ -87,22 +79,27 @@ def logout():
 
 # Add routes for login related functions.
 
-def add_login_routes(app):
+def init(app, user_db_path='user_db.json'):
     app.add_url_rule('/logout', None, logout)
     app.add_url_rule('/login', None, login, methods=['GET', 'POST'])
     app.add_url_rule('/new_user', None, new_user, methods=['POST'])
 
+    g.user_db = {'hashes':{}, 'salts':{}, 'user_info':{}}
+    g.user_db_path = user_db_path
+    if os.path.exists(user_db_path):
+        with open(user_db_path) as f:
+            g.user_db = json.loads(f.read())
 
-if __name__ == '__main__':   
+
+if __name__ == '__main__':
 
     # Run the example app.
 
     app = flask.Flask(__name__)
+    init(app)
 
     # Generate a secret key like so:  import os; os.urandom(17)
     app.secret_key = 'a unique secret string used to encrypt sessions'
-
-    add_login_routes(app)
 
     @app.route('/')
     def index():
@@ -115,6 +112,5 @@ if __name__ == '__main__':
     def get_secret_thing():
         return 'This is the secret thing!'
 
-    load_db()
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=port==5000)
