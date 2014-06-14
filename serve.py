@@ -19,7 +19,7 @@ def require_login(redirect=False):
     def require_login_(fn):
         def wrapped():
             username = session.get('username', None)
-            if not username or username not in user_db['user_info']:
+            if not username or username not in g.user_db['user_info']:
                 if redirect:
                     return flask.redirect('/login')
                 return 'not logged in', 401
@@ -39,11 +39,11 @@ def get_secret_thing():
 # Load user credentials from a json file.
 
 def load_db(user_db_path='user_db.json'):
-    global user_db
-    user_db = {'hashes':{}, 'salts':{}, 'user_info':{}}
+    g.user_db = {'hashes':{}, 'salts':{}, 'user_info':{}}
+    g.user_db_path = user_db_path
     if os.path.exists(user_db_path):
         with open(user_db_path) as f:
-            user_db = json.loads(f.read())
+            g.user_db = json.loads(f.read())
 
 
 # Validate credentials and save a new user.
@@ -63,20 +63,21 @@ def new_user():
         return 'illegal character in username', 400
     if len(password) > 100:
         return 'password too long', 400
-    if username in user_db['user_info']:
+    if username in g.user_db['user_info']:
         return 'user already exists', 400
-    if email in user_db['salts']:
+    if email in g.user_db['salts']:
         return 'email already exists', 400
         
-    user_db['salts'][username] = salt = str(uuid.uuid4())
-    user_db['hashes'][username] = hashlib.sha224(password + salt).hexdigest()
-    user_db['user_info'][username] = {'email':email}
+    g.user_db['salts'][username] = salt = str(uuid.uuid4())
+    g.user_db['hashes'][username] = hashlib.sha224(password + salt).hexdigest()
+    g.user_db['user_info'][username] = {'email':email}
 
-    with open(user_db_path, 'w') as f:
-        f.write(json.dumps(user_db, indent=2))
+    with open(g.user_db_path, 'w') as f:
+        f.write(json.dumps(g.user_db, indent=2))
 
     session['username'] = username
     return 'ok'
+
 
 # Verify username and password; log the user in.
 
@@ -85,11 +86,11 @@ def login():
     if request.method == 'POST':
         username, password = (
             request.form['username'], request.form['password'])
-        if username not in user_db['hashes']:
+        if username not in g.user_db['hashes']:
             return 'unknown user', 401
-        salt = user_db['salts'][username]
+        salt = g.user_db['salts'][username]
         if(hashlib.sha224(password + salt).hexdigest() != 
-           user_db['hashes'][username]):
+           g.user_db['hashes'][username]):
             return 'Incorrect password.', 401
         session['username'] = username
         return 'ok'
@@ -101,12 +102,14 @@ def logout():
     session.pop('username', None)
     return flask.redirect('/')
 
+class g:
+    user_db = None
 
 
 # Generate a secret key like so:  import os; os.urandom(17)
 app.secret_key = 'a unique secret string used to encrypt sessions'
 
 if __name__ == '__main__':
-    # Bind to PORT if defined, otherwise default to 5000.
+    load_db()
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=port==5000)
