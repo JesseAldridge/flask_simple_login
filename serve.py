@@ -14,12 +14,22 @@ def index():
     return flask.render_template('index.html')
 
 
+def require_login(fn, redirect=True):
+    def wrapped():
+        username = session.get('username', None)
+        if not username or username not in user_db['user_info']:
+            if redirect:
+                return flask.redirect('/login')
+            return 'not logged in', 401
+        return fn()
+    return wrapped
+
+
 # An example route showing how to require login.
 
 @app.route('/get_secret_thing', methods=['GET'])
+@require_login
 def get_secret_thing():
-    if not is_logged_in():
-        return flask.redirect('/login')
     return 'This is the secret thing!'
 
 
@@ -90,9 +100,6 @@ def logout():
     return flask.redirect('/')
 
 
-def is_logged_in():
-    username = session.get('username', None)
-    return username and username in user_db['user_info']
 
 # Generate a secret key like so:  import os; os.urandom(17)
 app.secret_key = 'a unique secret string used to encrypt sessions'
