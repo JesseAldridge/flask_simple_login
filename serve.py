@@ -36,10 +36,9 @@ def get_secret_thing():
     return 'This is the secret thing!'
 
 
+# Load user credentials from a json file.
+
 def load_db(user_db_path='user_db.json'):
-
-    # Load user credentials from a json file.
-
     global user_db
     user_db = {'hashes':{}, 'salts':{}, 'user_info':{}}
     if os.path.exists(user_db_path):
@@ -47,11 +46,10 @@ def load_db(user_db_path='user_db.json'):
             user_db = json.loads(f.read())
 
 
+# Validate credentials and save a new user.
+
 @app.route('/new_user', methods=['POST'])
 def new_user():
-
-    # Validate credentials and save a new user.
-
     username, email, password = (
         request.form['username'], request.form['email'],
         request.form['password'])
@@ -80,11 +78,10 @@ def new_user():
     session['username'] = username
     return 'ok'
 
+# Verify username and password; log the user in.
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-
-    # Verify username and password; log the user in.
-
     if request.method == 'POST':
         username, password = (
             request.form['username'], request.form['password'])
