@@ -76,7 +76,7 @@ def logout():
     return flask.redirect('/')
 
 
-# Add routes for login related functions.
+# Add login related routes.  Load user credentials from json file.
 
 def init(app, user_db_path='user_db.json'):
     app.add_url_rule('/logout', None, logout)
