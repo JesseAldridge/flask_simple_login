@@ -38,7 +38,11 @@ class LoginManager:
             f.write(json.dumps(g.user_db, indent=2))
 
         session['username'] = username
+        self.on_new_user(username)
         return 'ok'
+
+    def on_new_user(username):
+        pass
 
 # A decorator to require login.  Optionally redirect to a login page.
 
@@ -101,10 +105,8 @@ if __name__ == '__main__':
     app = flask.Flask(__name__)
 
     class CustomLogin(LoginManager):
-        def new_user(self):
-            response = LoginManager.new_user(self)
-            print 'new user created: ', session['username']
-            return response
+        def on_new_user(self, username):
+            print 'new user created: ', username
 
     init(app, login_manager=CustomLogin())
 
