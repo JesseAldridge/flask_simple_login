@@ -41,7 +41,7 @@ class LoginManager:
         self.on_new_user(username)
         return 'ok'
 
-    def on_new_user(username):
+    def on_new_user(self, username):
         pass
 
 # A decorator to require login.  Optionally redirect to a login page.
