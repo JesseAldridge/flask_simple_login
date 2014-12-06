@@ -67,9 +67,10 @@ def login():
         username, password = (
             request.form['username'], request.form['password'])
         if username not in g.user_db['hashes']:
+            print 'unknown user'
             return 'unknown user', 401
         salt = g.user_db['salts'][username]
-        if(hashlib.sha224(password + salt).hexdigest() != 
+        if(hashlib.sha224(password + salt).hexdigest() !=
            g.user_db['hashes'][username]):
             return 'Incorrect password.', 401
         session['username'] = username
