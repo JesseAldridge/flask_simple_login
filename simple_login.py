@@ -38,10 +38,27 @@ class LoginManager:
             f.write(json.dumps(g.user_db, indent=2))
 
         session['username'] = username
-        self.on_new_user(username)
+        self.on_login(username)
         return 'ok'
 
-    def on_new_user(self, username):
+    # Verify username and password; log the user in.
+
+    def login(self):
+        if request.method == 'POST':
+            username, password = (
+                request.form['username'], request.form['password'])
+            if username not in g.user_db['hashes']:
+                return 'unknown user', 401
+            salt = g.user_db['salts'][username]
+            if(hashlib.sha224(password + salt).hexdigest() !=
+               g.user_db['hashes'][username]):
+                return 'Incorrect password.', 401
+            session['username'] = username
+            self.on_login(username)
+            return 'ok'
+        return flask.render_template('login.html')
+
+    def on_login(self, username):
         pass
 
 # A decorator to require login.  Optionally redirect to a login page.
@@ -59,24 +76,6 @@ def require_login(redirect=False):
         return decorated_function
     return decorator
 
-
-# Verify username and password; log the user in.
-
-def login():
-    if request.method == 'POST':
-        username, password = (
-            request.form['username'], request.form['password'])
-        if username not in g.user_db['hashes']:
-            print 'unknown user'
-            return 'unknown user', 401
-        salt = g.user_db['salts'][username]
-        if(hashlib.sha224(password + salt).hexdigest() !=
-           g.user_db['hashes'][username]):
-            return 'Incorrect password.', 401
-        session['username'] = username
-        return 'ok'
-    return flask.render_template('login.html')
-
 def logout():
     session.pop('username', None)
     return flask.redirect('/')
@@ -88,7 +87,8 @@ def init(app, user_db_path='user_db.json', login_manager=None):
     g.login_manager = login_manager or LoginManager()
 
     app.add_url_rule('/logout', None, logout)
-    app.add_url_rule('/login', None, login, methods=['GET', 'POST'])
+    app.add_url_rule(
+        '/login', None,  g.login_manager.login, methods=['GET', 'POST'])
     app.add_url_rule(
         '/new_user', None, g.login_manager.new_user, methods=['POST'])
 
@@ -106,8 +106,8 @@ if __name__ == '__main__':
     app = flask.Flask(__name__)
 
     class CustomLogin(LoginManager):
-        def on_new_user(self, username):
-            print 'new user created: ', username
+        def on_login(self, username):
+            print 'user logged in: ', username
 
     init(app, login_manager=CustomLogin())
 
