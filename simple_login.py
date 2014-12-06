@@ -34,11 +34,12 @@ class LoginManager:
         g.user_db['hashes'][username] = hashlib.sha224(password + salt).hexdigest()
         g.user_db['user_info'][username] = {'email':email}
 
+        self.on_login(username)
+
+        session['username'] = username
         with open(g.user_db_path, 'w') as f:
             f.write(json.dumps(g.user_db, indent=2))
 
-        session['username'] = username
-        self.on_login(username)
         return 'ok'
 
     # Verify username and password; log the user in.
@@ -54,7 +55,9 @@ class LoginManager:
                g.user_db['hashes'][username]):
                 return 'Incorrect password.', 401
             session['username'] = username
+
             self.on_login(username)
+
             return 'ok'
         return flask.render_template('login.html')
 
