@@ -59,7 +59,9 @@ class LoginManager:
             self.on_login(username)
 
             return 'ok'
-        return flask.render_template('login.html')
+        # return flask.render_template('login.html')
+        with open(os.path.join(os.path.dirname(__file__), 'templates/login.html')) as f:
+            return f.read()
 
     def on_login(self, username):
         pass
@@ -86,14 +88,12 @@ def logout():
 
 # Add login related routes.  Load user credentials from json file.
 
-def init(app, user_db_path='user_db.json', login_manager=None):
+def init_login(app, user_db_path='user_db.json', login_manager=None):
     g.login_manager = login_manager or LoginManager()
 
     app.add_url_rule('/logout', None, logout)
-    app.add_url_rule(
-        '/login', None,  g.login_manager.login, methods=['GET', 'POST'])
-    app.add_url_rule(
-        '/new_user', None, g.login_manager.new_user, methods=['POST'])
+    app.add_url_rule('/login', None,  g.login_manager.login, methods=['GET', 'POST'])
+    app.add_url_rule('/new_user', None, g.login_manager.new_user, methods=['POST'])
 
     g.user_db = {'hashes':{}, 'salts':{}, 'user_info':{}}
     g.user_db_path = user_db_path
