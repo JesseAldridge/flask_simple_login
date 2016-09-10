@@ -4,6 +4,7 @@ import flask_simple_login
 
 app = flask.Flask(__name__)
 flask_simple_login.init_login(app)
+
 # Generate a secret key like so:  import os; os.urandom(17)
 app.secret_key = 'a unique secret string used to encrypt sessions'
 
