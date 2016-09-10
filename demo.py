@@ -14,5 +14,4 @@ def index():
     return 'You are logged in as: {}'.format(session.get('username', None))
 
 if __name__ == '__main__':
-    # Bind to PORT if defined, otherwise default to 3000.
     app.run(host='0.0.0.0', port=3000, debug=True)
